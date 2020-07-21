@@ -50,6 +50,7 @@
                         class="mb-2"
                         v-bind="attrs"
                         v-on="on"
+                        @click="randomizeBall()"
                     >追加
                     </v-btn>
                   </template>
@@ -201,135 +202,6 @@
               <v-icon color="primary" v-show="!anime" @click="update(item.id)">
                 mdi-pencil
               </v-icon>
-              <v-dialog v-if="updateDialog && !anime" v-model="updateDialog" max-width="500px">
-                <v-card>
-                  <v-card-title>
-                    <span class="headline">ボールを追加</span>
-                  </v-card-title>
-                  <v-card-text>
-                    <v-row>
-                      <v-col class="pr-4">
-                        <v-slider
-                            v-model="tmpBall.vx"
-                            class="align-center"
-                            max="15"
-                            min="-15"
-                            step="0.01"
-                            label="x方向の速度"
-                            hide-details
-                        >
-                          <template v-slot:append>
-                            <v-text-field
-                                v-model="tmpBall.vx"
-                                class="mt-0 pt-0"
-                                hide-details
-                                single-line
-                                type="number"
-                                max="15"
-                                min="-15"
-                                step="0.01"
-                                style="width: 60px"
-                            ></v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                    </v-row>
-                    <v-row>
-                      <v-col class="pr-4">
-                        <v-slider
-                            v-model="tmpBall.vz"
-                            class="align-center"
-                            max="15"
-                            min="-15"
-                            step="0.01"
-                            label="z方向の速度"
-                            hide-details
-                        >
-                          <template v-slot:append>
-                            <v-text-field
-                                v-model="tmpBall.vz"
-                                class="mt-0 pt-0"
-                                hide-details
-                                single-line
-                                type="number"
-                                max="15"
-                                min="-15"
-                                step="0.01"
-                                style="width: 60px"
-                            ></v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                    </v-row>
-                    <v-row>
-                      <v-col class="pr-4">
-                        <v-slider
-                            v-model="tmpBall.r"
-                            class="align-center"
-                            max="2.0"
-                            min="0.8"
-                            step="0.1"
-                            label="半径"
-                            hide-details
-                        >
-                          <template v-slot:append>
-                            <v-text-field
-                                v-model="tmpBall.r"
-                                class="mt-0 pt-0"
-                                hide-details
-                                single-line
-                                type="number"
-                                step="0.1"
-                                max="2.0"
-                                min="0.8"
-                                style="width: 60px"
-                            ></v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                    </v-row>
-                    <v-row>
-                      <v-col class="pr-4">
-                        <v-slider
-                            v-model="tmpBall.m"
-                            class="align-center"
-                            max="30"
-                            min="1"
-                            step="1"
-                            label="質量"
-                            hide-details
-                        >
-                          <template v-slot:append>
-                            <v-text-field
-                                v-model="tmpBall.m"
-                                class="mt-0 pt-0"
-                                hide-details
-                                single-line
-                                type="number"
-                                step="1"
-                                max="30"
-                                min="1"
-                                style="width: 60px"
-                            ></v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                    </v-row>
-                    <v-row>
-                      <v-col class="pr-4 d-flex align-center">
-                        <label class="mr-4">ボールの色</label>
-                        <input type="color" v-model="tmpBall.color">
-                      </v-col>
-                    </v-row>
-                  </v-card-text>
-
-                  <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn color="blue darken-1" text @click="updateDialog=false">キャンセル</v-btn>
-                    <v-btn color="blue darken-1" text @click="updateBall()">更新</v-btn>
-                  </v-card-actions>
-                </v-card>
-              </v-dialog>
             </template>
             <template v-slot:item.delete="{ item }">
               <v-icon v-show="anime">
@@ -341,6 +213,135 @@
             </template>
           </v-data-table>
         </v-card>
+        <v-dialog v-if="updateDialog && !anime" v-model="updateDialog" max-width="500px">
+          <v-card>
+            <v-card-title>
+              <span class="headline">ボールを追加</span>
+            </v-card-title>
+            <v-card-text>
+              <v-row>
+                <v-col class="pr-4">
+                  <v-slider
+                      v-model="tmpBall.vx"
+                      class="align-center"
+                      max="15"
+                      min="-15"
+                      step="0.01"
+                      label="x方向の速度"
+                      hide-details
+                  >
+                    <template v-slot:append>
+                      <v-text-field
+                          v-model="tmpBall.vx"
+                          class="mt-0 pt-0"
+                          hide-details
+                          single-line
+                          type="number"
+                          max="15"
+                          min="-15"
+                          step="0.01"
+                          style="width: 60px"
+                      ></v-text-field>
+                    </template>
+                  </v-slider>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col class="pr-4">
+                  <v-slider
+                      v-model="tmpBall.vz"
+                      class="align-center"
+                      max="15"
+                      min="-15"
+                      step="0.01"
+                      label="z方向の速度"
+                      hide-details
+                  >
+                    <template v-slot:append>
+                      <v-text-field
+                          v-model="tmpBall.vz"
+                          class="mt-0 pt-0"
+                          hide-details
+                          single-line
+                          type="number"
+                          max="15"
+                          min="-15"
+                          step="0.01"
+                          style="width: 60px"
+                      ></v-text-field>
+                    </template>
+                  </v-slider>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col class="pr-4">
+                  <v-slider
+                      v-model="tmpBall.r"
+                      class="align-center"
+                      max="2.0"
+                      min="0.8"
+                      step="0.1"
+                      label="半径"
+                      hide-details
+                  >
+                    <template v-slot:append>
+                      <v-text-field
+                          v-model="tmpBall.r"
+                          class="mt-0 pt-0"
+                          hide-details
+                          single-line
+                          type="number"
+                          step="0.1"
+                          max="2.0"
+                          min="0.8"
+                          style="width: 60px"
+                      ></v-text-field>
+                    </template>
+                  </v-slider>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col class="pr-4">
+                  <v-slider
+                      v-model="tmpBall.m"
+                      class="align-center"
+                      max="30"
+                      min="1"
+                      step="1"
+                      label="質量"
+                      hide-details
+                  >
+                    <template v-slot:append>
+                      <v-text-field
+                          v-model="tmpBall.m"
+                          class="mt-0 pt-0"
+                          hide-details
+                          single-line
+                          type="number"
+                          step="1"
+                          max="30"
+                          min="1"
+                          style="width: 60px"
+                      ></v-text-field>
+                    </template>
+                  </v-slider>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col class="pr-4 d-flex align-center">
+                  <label class="mr-4">ボールの色</label>
+                  <input type="color" v-model="tmpBall.color">
+                </v-col>
+              </v-row>
+            </v-card-text>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" text @click="updateDialog=false">キャンセル</v-btn>
+              <v-btn color="blue darken-1" text @click="updateBall()">更新</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </div>
     </v-content>
   </v-app>
@@ -425,6 +426,10 @@
         drag: false,             // マウスドラッグフラグ
 
         addBall: {
+          vx: this.getRandomArbitrary(-15, 15),
+          vz: this.getRandomArbitrary(-15, 15),
+          r: this.getRandomArbitrary(0.8, 2),
+          m: this.getRandomArbitrary(1, 30),
           color: "#9999fc"
         },
         tmpBall: {},
@@ -511,7 +516,7 @@
         const planeGeometry = new THREE.PlaneGeometry(PLANE_HEIGHT + RADIUS, PLANE_WIDTH + RADIUS, 1, 1);
         // let texture = new THREE.TextureLoader().load("img/picaso.jpg")
         // let texture = new THREE.TextureLoader().load("img/kinoko.png")
-        let texture = new THREE.TextureLoader().load("./shiba.jpg")
+        let texture = new THREE.TextureLoader().load("https://shirakiyo.github.io/ballCollision/shiba.jpg")
         const planeMaterial = new THREE.MeshStandardMaterial({map: texture});
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.rotation.set(-Math.PI / 2, 0, 0);
@@ -758,15 +763,8 @@
         this.crash[this.ball.length - 1] = [];
 
         this.dialog = false;
-
-        const red = this.getRandomInt(255).toString(16);
-        const green = this.getRandomInt(255).toString(16);
-        const blue = this.getRandomInt(255).toString(16);
-        this.addBall.color = '#' + red + green + blue;
       },
       update(id) {
-        console.log(this.ball)
-        console.log(id)
         this.updateDialog = true
         this.updateIndex = id
         this.tmpBall.vx = this.ball[id].vx
@@ -803,6 +801,19 @@
         for (let i = 0; i < this.ball.length; i++) {
           this.ball[i].id = i
         }
+      },
+      randomizeBall() {
+        let red = this.getRandomInt(255).toString(16);
+        let green = this.getRandomInt(255).toString(16);
+        let blue = this.getRandomInt(255).toString(16);
+        if (red.length === 1) red = '0' + red;
+        if (green.length === 1) green = '0' + green;
+        if (blue.length === 1) blue = '0' + blue;
+        this.addBall.color = '#' + red + green + blue;
+        this.addBall.vx = this.getRandomArbitrary(-15, 15);
+        this.addBall.vz = this.getRandomArbitrary(-15, 15);
+        this.addBall.r = this.getRandomArbitrary(0.8, 2);
+        this.addBall.m = this.getRandomArbitrary(1, 30);
       }
     },
     filters: {
