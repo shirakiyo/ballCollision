@@ -1,0 +1,816 @@
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r118/three.min.js"></script>
+  <script src="https://e.kano.ac/js/OrbitControls.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+<body>
+</v-content>
+</v-app>
+<div id="app">
+  <v-app>
+    <v-content>
+      <h1 class="ma-8" style="text-align: center;">4618037：ボールの衝突プログラム</h1>
+      <div class="d-flex justify-center">
+        <div class="mr-8">
+          <div style="width: 800px; height: 500px;">
+            <canvas id="myCanvas" width="800" height="500" style="position: absolute;"></canvas>
+            <canvas id="2dCanvas" width="800" height="500" style="position: absolute;"></canvas>
+          </div>
+          <div class="mt-4 d-flex justify-space-around">
+            <v-btn id="btnAnime" @click="startAnime()">{{animeText}}</v-btn>
+            <v-btn id="btnStep" value="next step" @click="stepOnce()">1ステップ進む</v-btn>
+            <v-btn id="btnReset" value="reset" @click="reset()">リセット</v-btn>
+            <v-btn value="angle reset" @click="setCamera()">カメラアングルリセット</v-btn>
+          </div>
+        </div>
+        <v-card width="600">
+          <v-data-table
+              :headers="headers"
+              hide-default-footer
+              :items="ball"
+          >
+            <template v-slot:top>
+              <v-toolbar flat color="white">
+                <v-toolbar-title>ボール情報</v-toolbar-title>
+                <v-divider
+                    class="mx-4"
+                    inset
+                    vertical
+                ></v-divider>
+                <v-spacer></v-spacer>
+                <v-dialog v-if="!anime" v-model="dialog" max-width="500px">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn
+                        color="primary"
+                        dark
+                        class="mb-2"
+                        v-bind="attrs"
+                        v-on="on"
+                    >追加
+                    </v-btn>
+                  </template>
+                  <v-card>
+                    <v-card-title>
+                      <span class="headline">ボールを追加</span>
+                    </v-card-title>
+                    <v-card-text>
+                      <v-row>
+                        <v-col class="pr-4">
+                          <v-slider
+                              v-model="addBall.vx"
+                              class="align-center"
+                              max="15"
+                              min="-15"
+                              step="0.01"
+                              label="x方向の速度"
+                              hide-details
+                          >
+                            <template v-slot:append>
+                              <v-text-field
+                                  v-model="addBall.vx"
+                                  class="mt-0 pt-0"
+                                  hide-details
+                                  single-line
+                                  type="number"
+                                  max="15"
+                                  min="-15"
+                                  step="0.01"
+                                  style="width: 60px"
+                              ></v-text-field>
+                            </template>
+                          </v-slider>
+                        </v-col>
+                      </v-row>
+                      <v-row>
+                        <v-col class="pr-4">
+                          <v-slider
+                              v-model="addBall.vz"
+                              class="align-center"
+                              max="15"
+                              min="-15"
+                              step="0.01"
+                              label="z方向の速度"
+                              hide-details
+                          >
+                            <template v-slot:append>
+                              <v-text-field
+                                  v-model="addBall.vz"
+                                  class="mt-0 pt-0"
+                                  hide-details
+                                  single-line
+                                  type="number"
+                                  max="15"
+                                  min="-15"
+                                  step="0.01"
+                                  style="width: 60px"
+                              ></v-text-field>
+                            </template>
+                          </v-slider>
+                        </v-col>
+                      </v-row>
+                      <v-row>
+                        <v-col class="pr-4">
+                          <v-slider
+                              v-model="addBall.r"
+                              class="align-center"
+                              max="2.0"
+                              min="0.8"
+                              step="0.1"
+                              label="半径"
+                              hide-details
+                          >
+                            <template v-slot:append>
+                              <v-text-field
+                                  v-model="addBall.r"
+                                  class="mt-0 pt-0"
+                                  hide-details
+                                  single-line
+                                  type="number"
+                                  step="0.1"
+                                  max="2.0"
+                                  min="0.8"
+                                  style="width: 60px"
+                              ></v-text-field>
+                            </template>
+                          </v-slider>
+                        </v-col>
+                      </v-row>
+                      <v-row>
+                        <v-col class="pr-4">
+                          <v-slider
+                              v-model="addBall.m"
+                              class="align-center"
+                              max="30"
+                              min="1"
+                              step="1"
+                              label="質量"
+                              hide-details
+                          >
+                            <template v-slot:append>
+                              <v-text-field
+                                  v-model="addBall.m"
+                                  class="mt-0 pt-0"
+                                  hide-details
+                                  single-line
+                                  type="number"
+                                  step="1"
+                                  max="30"
+                                  min="1"
+                                  style="width: 60px"
+                              ></v-text-field>
+                            </template>
+                          </v-slider>
+                        </v-col>
+                      </v-row>
+                      <v-row>
+                        <v-col class="pr-4 d-flex align-center">
+                          <label class="mr-4">ボールの色</label>
+                          <input type="color" v-model="addBall.color">
+                        </v-col>
+                      </v-row>
+                    </v-card-text>
+
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn color="blue darken-1" text @click="dialog=false">キャンセル</v-btn>
+                      <v-btn color="blue darken-1" text
+                             @click="setBall(addBall.vx, 0, addBall.vz, addBall.r, addBall.m, addBall.color)">追加
+                      </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
+              </v-toolbar>
+            </template>
+            <template v-slot:item.vx="{ item }">
+              {{item.vx | ROUND}}
+            </template>
+            <template v-slot:item.vz="{ item }">
+              {{item.vz | ROUND}}
+            </template>
+            <template v-slot:item.color="{ item }">
+              <input type="color" v-model="item.color" disabled>
+            </template>
+            <template v-slot:item.update="{ item }">
+              <v-icon v-show="anime">
+                mdi-pencil
+              </v-icon>
+              <v-icon color="primary" v-show="!anime" @click="update(item.id)">
+                mdi-pencil
+              </v-icon>
+              <v-dialog v-if="updateDialog && !anime" v-model="updateDialog" max-width="500px">
+                <v-card>
+                  <v-card-title>
+                    <span class="headline">ボールを追加</span>
+                  </v-card-title>
+                  <v-card-text>
+                    <v-row>
+                      <v-col class="pr-4">
+                        <v-slider
+                            v-model="tmpBall.vx"
+                            class="align-center"
+                            max="15"
+                            min="-15"
+                            step="0.01"
+                            label="x方向の速度"
+                            hide-details
+                        >
+                          <template v-slot:append>
+                            <v-text-field
+                                v-model="tmpBall.vx"
+                                class="mt-0 pt-0"
+                                hide-details
+                                single-line
+                                type="number"
+                                max="15"
+                                min="-15"
+                                step="0.01"
+                                style="width: 60px"
+                            ></v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                    </v-row>
+                    <v-row>
+                      <v-col class="pr-4">
+                        <v-slider
+                            v-model="tmpBall.vz"
+                            class="align-center"
+                            max="15"
+                            min="-15"
+                            step="0.01"
+                            label="z方向の速度"
+                            hide-details
+                        >
+                          <template v-slot:append>
+                            <v-text-field
+                                v-model="tmpBall.vz"
+                                class="mt-0 pt-0"
+                                hide-details
+                                single-line
+                                type="number"
+                                max="15"
+                                min="-15"
+                                step="0.01"
+                                style="width: 60px"
+                            ></v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                    </v-row>
+                    <v-row>
+                      <v-col class="pr-4">
+                        <v-slider
+                            v-model="tmpBall.r"
+                            class="align-center"
+                            max="2.0"
+                            min="0.8"
+                            step="0.1"
+                            label="半径"
+                            hide-details
+                        >
+                          <template v-slot:append>
+                            <v-text-field
+                                v-model="tmpBall.r"
+                                class="mt-0 pt-0"
+                                hide-details
+                                single-line
+                                type="number"
+                                step="0.1"
+                                max="2.0"
+                                min="0.8"
+                                style="width: 60px"
+                            ></v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                    </v-row>
+                    <v-row>
+                      <v-col class="pr-4">
+                        <v-slider
+                            v-model="tmpBall.m"
+                            class="align-center"
+                            max="30"
+                            min="1"
+                            step="1"
+                            label="質量"
+                            hide-details
+                        >
+                          <template v-slot:append>
+                            <v-text-field
+                                v-model="tmpBall.m"
+                                class="mt-0 pt-0"
+                                hide-details
+                                single-line
+                                type="number"
+                                step="1"
+                                max="30"
+                                min="1"
+                                style="width: 60px"
+                            ></v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                    </v-row>
+                    <v-row>
+                      <v-col class="pr-4 d-flex align-center">
+                        <label class="mr-4">ボールの色</label>
+                        <input type="color" v-model="tmpBall.color">
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="blue darken-1" text @click="updateDialog=false">キャンセル</v-btn>
+                    <v-btn color="blue darken-1" text @click="updateBall()">更新</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+            </template>
+            <template v-slot:item.delete="{ item }">
+              <v-icon v-show="anime">
+                mdi-delete
+              </v-icon>
+              <v-icon color="red" v-show="!anime" @click="deleteBall(item.id)">
+                mdi-delete
+              </v-icon>
+            </template>
+          </v-data-table>
+        </v-card>
+      </div>
+    </v-content>
+  </v-app>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+<script>
+  let canvas, canvas2d;
+  let ctx2d;
+  let renderer;
+  let scene, camera;
+
+  const RADIUS = 1.2;       // ボールの半径
+  const PLANE_WIDTH = 20; // 平面オブジェクトの一辺
+  const PLANE_HEIGHT = 20; // 平面オブジェクトの一辺
+  const limitVX = 15; // ボールのx方向の最大速度
+  const limitVZ = 10; // ボールのy方向の最大速度
+
+  const STEP = 0.05;  // 時間刻み幅
+  const E = 0.8;      // 反発係数
+  const G = 9.8;          // 重力加速度
+
+  let globalID = 0;
+
+  // ボールオブジェクト生成
+  function Ball(x, y, z, vx, vy, vz, r, m, color, sphere) {
+    this.id = globalID++;
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.vx = vx;
+    this.vy = vy;
+    this.vz = vz;
+    this.r = r;
+    this.m = m;
+    this.color = color;
+    this.xPrev = x;
+    this.yPrev = y;
+    this.zPrev = z;
+    this.xInit = x;
+    this.yInit = y;
+    this.zInit = z;
+    this.vxInit = vx;
+    this.vyInit = vy;
+    this.vzInit = vz;
+    this.sphere = sphere;
+
+    this.set = function (x, y, z) {
+      this.sphere.position.set(x, y, z)
+    }
+
+    this.reset = function () {
+      this.x = this.xInit
+      this.y = this.yInit
+      this.z = this.zInit
+      this.vx = this.vxInit
+      this.vy = this.vyInit
+      this.vz = this.vzInit
+    }
+
+    this.changeSphere = function (s) {
+      this.sphere = s
+    }
+  }
+
+  new Vue({
+    el: '#app',
+    vuetify: new Vuetify(),
+    data() {
+      return {
+        ball: [],
+        crash: [],
+        time: 0,
+
+        dialog: false,
+        updateDialog: false,
+        updateIndex: null,
+
+        anime: false,            // アニメーションフラグ
+        animeOnce: false,        // 1ステップアニメーションフラグ
+        drag: false,             // マウスドラッグフラグ
+
+        addBall: {
+          color: "#9999fc"
+        },
+        tmpBall: {},
+
+        animeText: "スタート",
+        headers: [
+          {text: 'vx', value: 'vx'},
+          {text: 'vz', value: 'vz'},
+          {text: '半径', value: 'r'},
+          {text: '質量', value: 'm'},
+          {text: '色', value: 'color'},
+          {text: '更新', value: 'update'},
+          {text: '削除', value: 'delete'},
+        ]
+      }
+    },
+    mounted() {
+      canvas = document.getElementById('myCanvas'); // キャンバス要素の取得
+      renderer = new THREE.WebGLRenderer({canvas}); // レンダラの作成
+      scene = new THREE.Scene();                    // シーンの作成
+      canvas2d = document.getElementById('2dCanvas'); // キャンバス要素の取得
+      ctx2d = canvas2d.getContext('2d');
+      // カメラの作成
+      camera = new THREE.PerspectiveCamera(25, canvas.width / canvas.height, 0.1, 1000);
+      camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+      // マウスドラッグ中は描画を更新
+      canvas.addEventListener('mousemove', function () {
+        if (!this.anime) this.draw();
+      });
+      canvas.addEventListener('mousedown', function () {
+        if (!this.anime) this.drag = true;
+      });
+      canvas.addEventListener('mouseup', function () {
+        if (!this.anime) this.drag = false;
+      });
+
+      this.renderInit()
+      this.init()
+    },
+    methods: {
+      init() {
+        // ボールの初期化
+        for (let i = 0; i < 2; i++) {
+          const r = RADIUS;
+          const vx = this.getRandomArbitrary(-limitVX, limitVX);
+          const vy = 0;
+          const vz = this.getRandomArbitrary(-limitVZ, limitVZ);
+
+          if (i === 0) {
+            this.setBall(vx, vy, vz, r, 20, '#9999fc')
+          } else {
+            this.setBall(vx, vy, vz, r, 20, '#edfc99')
+          }
+        }
+
+        // カメラ位置の初期化
+        this.setCamera()
+
+        this.animeText = 'スタート'
+        this.draw(); // 描画実行
+      },
+      getRandomArbitrary(min, max) {
+        return Math.random() * (max - min) + min;
+      },
+      getRandomInt(max) {
+        return Math.floor(Math.random() * Math.floor(max));
+      },
+      setCamera() {
+        camera.position.set(0, 40, 50); // 横から
+        // camera.position.set(0, 100, 0); // 上から
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+      },
+      renderInit() {
+        // カメラコントローラーを作成
+        const controls = new THREE.OrbitControls(camera, canvas2d);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.2;
+        controls.maxPolarAngle = Math.PI * 0.4;
+
+
+        // 平面の作成
+        const planeGeometry = new THREE.PlaneGeometry(PLANE_HEIGHT + RADIUS, PLANE_WIDTH + RADIUS, 1, 1);
+        // let texture = new THREE.TextureLoader().load("img/picaso.jpg")
+        // let texture = new THREE.TextureLoader().load("img/kinoko.png")
+        let texture = new THREE.TextureLoader().load("./shiba.jpg")
+        const planeMaterial = new THREE.MeshStandardMaterial({map: texture});
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.set(-Math.PI / 2, 0, 0);
+        scene.add(plane);
+
+        const boxGeometry1 = new THREE.BoxGeometry(PLANE_HEIGHT + 2, RADIUS, 1, 1);
+        const boxMaterial1 = new THREE.MeshPhongMaterial({color: '#6c4303'});
+        const box1 = new THREE.Mesh(boxGeometry1, boxMaterial1);
+        box1.rotation.set(0, 0, 0);
+        box1.position.set(0, RADIUS / 2, PLANE_WIDTH / 2 + 0.42 * RADIUS)
+        scene.add(box1);
+
+        const box2 = new THREE.Mesh(boxGeometry1, boxMaterial1);
+        box2.rotation.set(0, 0, 0);
+        box2.position.set(0, RADIUS / 2, -(PLANE_WIDTH / 2 + 0.42 * RADIUS))
+        scene.add(box2);
+
+        const boxGeometry2 = new THREE.BoxGeometry(PLANE_WIDTH + 1.5 * RADIUS, RADIUS, 1, 1);
+        const boxMaterial2 = new THREE.MeshPhongMaterial({color: '#6c4303'});
+        const box3 = new THREE.Mesh(boxGeometry2, boxMaterial2);
+        box3.rotation.set(0, Math.PI / 2, 0);
+        box3.position.set(-(PLANE_HEIGHT / 2 + 0.42 * RADIUS), RADIUS / 2, 0)
+        scene.add(box3);
+
+        const box4 = new THREE.Mesh(boxGeometry2, boxMaterial2);
+        box4.rotation.set(0, Math.PI / 2, 0);
+        box4.position.set(PLANE_HEIGHT / 2 + 0.42 * RADIUS, RADIUS / 2, 0)
+        scene.add(box4);
+
+        // 平行光源
+        const light_left = new THREE.DirectionalLight('white', 1);   // 白色、強度1（最大）
+        light_left.position.set(0, 30, 30);                        // 光源の位置を設定
+        scene.add(light_left);                                       // シーンへ追加
+
+        scene.background = new THREE.Color(0xcce0ff);
+        scene.fog = new THREE.Fog("white", 50, 200);
+
+        // const light_right = new THREE.DirectionalLight('white', 1);   // 白色、強度1（最大）
+        // light_right.position.set(40, 30, -30);                        // 光源の位置を設定
+        // scene.add(light_right);                                       // シーンへ追加
+
+        // 軸の作成
+        const axes = new THREE.AxesHelper(5);
+        axes.position.set(-18, 0, 0)
+        scene.add(axes);
+
+        // 設定したカメラ位置からシーンの描画（レンダリング）
+        renderer.render(scene, camera);
+      },
+      draw() {
+        // 設定したカメラ位置からシーンの描画（レンダリング）
+        renderer.render(scene, camera);
+
+        // 経過時間の描画
+        ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+        ctx2d.font = '20px san-serif';
+        ctx2d.fillStyle = "black"
+        ctx2d.fillText('Time: ' + this.time.toFixed(2), 10, 25);
+
+        ctx2d.beginPath();
+        ctx2d.rect(40, canvas2d.height - 70, 90, 60);
+        ctx2d.fillStyle = "white"
+        ctx2d.fill();
+        ctx2d.stroke();
+
+        ctx2d.beginPath();
+        ctx2d.rect(50, canvas2d.height - 55, 40, 2);
+        ctx2d.fillStyle = "#ff0000"
+        ctx2d.font = '12px san-serif'
+        ctx2d.fill();
+        ctx2d.fillStyle = "black"
+        ctx2d.fillText('x', 110, canvas2d.height - 50);
+
+        ctx2d.beginPath();
+        ctx2d.rect(50, canvas2d.height - 40, 40, 2);
+        ctx2d.fillStyle = "#00ff00"
+        ctx2d.font = '12px san-serif'
+        ctx2d.fill();
+        ctx2d.fillStyle = "black"
+        ctx2d.fillText('y', 110, canvas2d.height - 35);
+
+        ctx2d.beginPath();
+        ctx2d.rect(50, canvas2d.height - 25, 40, 2);
+        ctx2d.fillStyle = "#0000ff"
+        ctx2d.font = '12px san-serif'
+        ctx2d.fill();
+        ctx2d.fillStyle = "black"
+        ctx2d.fillText('z', 110, canvas2d.height - 20);
+
+        if (this.anime || this.animeOnce) {
+          for (let i = 0; i < this.ball.length; i++) {
+            if (this.animeOnce) this.animeOnce = false;
+            // 速度の更新
+            this.ball[i].vy = this.ball[i].vy - STEP * G;
+
+            // 座標の更新 (オイラー法）
+            this.ball[i].x += STEP * this.ball[i].vx;
+            if (this.ball[i].x - this.ball[i].r < -PLANE_HEIGHT / 2) {
+              this.ball[i].x = this.ball[i].r - PLANE_HEIGHT / 2;
+              this.ball[i].vx *= -E;
+            }
+            if (this.ball[i].x + this.ball[i].r > PLANE_HEIGHT / 2) {
+              this.ball[i].x = -this.ball[i].r + PLANE_HEIGHT / 2;
+              this.ball[i].vx *= -E;
+            }
+
+            this.ball[i].y += STEP * this.ball[i].vy;
+            if (this.ball[i].y - this.ball[i].r < 0) {
+              this.ball[i].y = this.ball[i].r;
+              this.ball[i].vy = -E * this.ball[i].vy
+            }
+
+            this.ball[i].z += STEP * this.ball[i].vz;
+            if (this.ball[i].z - this.ball[i].r < -PLANE_WIDTH / 2) {
+              this.ball[i].z = this.ball[i].r - PLANE_WIDTH / 2;
+              this.ball[i].vz *= -E;
+            }
+            if (this.ball[i].z + this.ball[i].r > PLANE_WIDTH / 2) {
+              this.ball[i].z = -this.ball[i].r + PLANE_WIDTH / 2;
+              this.ball[i].vz *= -E;
+            }
+          }
+
+// ボール同士の衝突
+          for (let i = 0; i < this.ball.length; i++) {
+            if (i + 1 === this.ball.length) break;
+            for (let j = i + 1; j < this.ball.length; j++) {
+              if (Math.hypot(this.ball[i].x - this.ball[j].x, this.ball[i].z - this.ball[j].z) < this.ball[i].r + this.ball[j].r) {
+                if (!this.crash[i][j]) {
+                  const mi = this.ball[i].m
+                  const mj = this.ball[j].m
+                  const vxi = ((mi - mj) * this.ball[i].vx + 2 * mj * this.ball[j].vx) / (mi + mj);
+                  const vzi = ((mi - mj) * this.ball[i].vz + 2 * mj * this.ball[j].vz) / (mi + mj);
+                  this.ball[j].vx = ((mj - mi) * this.ball[j].vx + 2 * mi * this.ball[i].vx) / (mi + mj);
+                  this.ball[j].vz = ((mj - mi) * this.ball[j].vz + 2 * mi * this.ball[i].vz) / (mi + mj);
+
+                  this.ball[i].vx = vxi
+                  this.ball[i].vz = vzi
+
+                  // let theta, phi, vai, vaj, vbi, vbj;
+                  //
+                  // // 作用線に対し水平・垂直方向のベクトルに分解
+                  // theta = Math.atan2(this.ball[i].z - this.ball[j].z, this.ball[i].x - this.ball[j].x);
+                  // phi = Math.atan2(this.ball[i].vz, this.ball[i].vx) - theta;
+                  // vai = Math.hypot(this.ball[i].vz, this.ball[i].vx) * Math.cos(phi);
+                  // vbi = Math.hypot(this.ball[i].vz, this.ball[i].vx) * Math.sin(phi);
+                  // phi = Math.atan2(this.ball[j].vz, this.ball[j].vx) - theta;
+                  // vaj = Math.hypot(this.ball[j].vz, this.ball[j].vx) * Math.cos(phi);
+                  // vbj = Math.hypot(this.ball[j].vz, this.ball[j].vx) * Math.sin(phi);
+                  //
+                  // // 作用線方向の速度成分の交換（質量が同じ場合）
+                  // let tmp = vai;
+                  // vai = vaj;
+                  // vaj = tmp;
+                  //
+                  // // XY方向のベクトルに変換・合成
+                  // this.ball[i].vx = vai * Math.cos(theta) - vbi * Math.sin(theta);
+                  // this.ball[i].vz = vai * Math.sin(theta) + vbi * Math.cos(theta);
+                  // this.ball[j].vx = vaj * Math.cos(theta) - vbj * Math.sin(theta);
+                  // this.ball[j].vz = vaj * Math.sin(theta) + vbj * Math.cos(theta);
+
+                  // 直前の座標
+                  this.ball[i].x = this.ball[i].xPrev;
+                  this.ball[i].y = this.ball[i].yPrev;
+                  this.ball[i].z = this.ball[i].zPrev;
+                  this.ball[j].x = this.ball[j].xPrev;
+                  this.ball[j].y = this.ball[j].yPrev;
+                  this.ball[j].z = this.ball[j].zPrev;
+
+                  this.crash[i][j] = true
+                }
+              } else {
+                this.crash[i][j] = false
+              }
+            }
+          }
+
+          for (let i = 0; i < this.ball.length; i++) {
+            // 直前の座標の記録
+            this.ball[i].xPrev = this.ball[i].x
+            this.ball[i].yPrev = this.ball[i].y
+            this.ball[i].zPrev = this.ball[i].z
+            this.ball[i].vxPrev = this.ball[i].vx
+            this.ball[i].vyPrev = this.ball[i].vy
+            this.ball[i].vzPrev = this.ball[i].vz
+            this.ball[i].set(this.ball[i].x, this.ball[i].y, this.ball[i].z);
+          }
+          this.time += STEP;
+        }
+        requestAnimationFrame(this.draw);
+      },
+      startAnime() {
+        if (this.anime) {
+          this.anime = false;
+          this.animeText = 'スタート'
+        } else {
+          this.anime = true;
+          this.animeText = 'ストップ'
+          this.draw();
+        }
+      },
+      stepOnce() {
+        this.animeOnce = true;
+        this.draw();
+      },
+      reset() {
+        for (let i = 0; i < this.ball.length; i++) {
+          this.ball[i].reset()
+          this.ball[i].set(this.ball[i].xInit, this.ball[i].yInit, this.ball[i].zInit)
+        }
+        this.anime = false
+        this.animeText = 'スタート';
+        this.setCamera()
+        this.time = 0
+      },
+      setBall(vx, vy, vz, r, m, color) {
+        let x, z;
+        const y = r;
+        let flag = false;
+        while (!flag) {
+          x = this.getRandomArbitrary(-(PLANE_HEIGHT / 2 - r), PLANE_HEIGHT / 2 - r);
+          z = this.getRandomArbitrary(-(PLANE_WIDTH / 2 - r), PLANE_WIDTH / 2 - r);
+
+          let ballFlag = false
+          for (let j = 0; j < this.ball.length; j++) {
+            if (Math.hypot(x - this.ball[j].x, z - this.ball[j].z) < r + this.ball[j].r) {
+              ballFlag = true
+              break
+            }
+          }
+
+          if (ballFlag === false) {
+            break
+          }
+        }
+
+
+        let sphereGeometry = new THREE.SphereGeometry(r, 30, 30);
+        let sphereMaterial = new THREE.MeshPhongMaterial({color: color});
+        let sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        scene.add(sphere);
+        this.ball.push(new Ball(x, y, z, vx, vy, vz, r, m, color, sphere))
+        this.ball[this.ball.length - 1].set(x, y, z);
+        this.crash[this.ball.length - 1] = [];
+
+        this.dialog = false;
+
+        const red = this.getRandomInt(255).toString(16);
+        const green = this.getRandomInt(255).toString(16);
+        const blue = this.getRandomInt(255).toString(16);
+        this.addBall.color = '#' + red + green + blue;
+      },
+      update(id) {
+        console.log(this.ball)
+        console.log(id)
+        this.updateDialog = true
+        this.updateIndex = id
+        this.tmpBall.vx = this.ball[id].vx
+        this.tmpBall.vz = this.ball[id].vz
+        this.tmpBall.m = this.ball[id].m
+        this.tmpBall.r = this.ball[id].r
+        this.tmpBall.color = this.ball[id].color
+      },
+      updateBall() {
+        this.ball[this.updateIndex].vx = this.tmpBall.vx
+        this.ball[this.updateIndex].vz = this.tmpBall.vz
+        this.ball[this.updateIndex].m = this.tmpBall.m
+        this.ball[this.updateIndex].r = this.tmpBall.r
+        this.ball[this.updateIndex].color = this.tmpBall.color
+
+        scene.remove(this.ball[this.updateIndex].sphere);
+
+        let sphereGeometry = new THREE.SphereGeometry(this.tmpBall.r, 30, 30);
+        let sphereMaterial = new THREE.MeshPhongMaterial({color: this.tmpBall.color});
+        let sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        scene.add(sphere);
+        this.ball[this.updateIndex].changeSphere(sphere)
+        this.ball[this.updateIndex].set(this.ball[this.updateIndex].x, this.tmpBall.r, this.ball[this.updateIndex].z)
+
+        this.updateDialog = false
+      },
+      deleteBall(idx) {
+        if (confirm("ボールを削除しますか？")) {
+          scene.remove(this.ball[idx].sphere);
+          this.ball.splice(idx, 1)
+          this.updateDialog = false
+          globalID--
+        }
+        for (let i = 0; i < this.ball.length; i++) {
+          this.ball[i].id = i
+        }
+      }
+    },
+    filters: {
+      ROUND(num) {
+        return Math.round(num * 100) / 100
+      }
+    }
+  })
+</script>
+</body>
+</html>
