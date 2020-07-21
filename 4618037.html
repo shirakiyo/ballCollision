@@ -22,7 +22,8 @@
           </div>
           <div class="mt-4 d-flex justify-space-around">
             <v-btn id="btnAnime" @click="startAnime()">{{animeText}}</v-btn>
-            <v-btn id="btnStep" value="next step" @click="stepOnce()">1ステップ進む</v-btn>
+            <v-btn id="btnStep" v-if="!anime" value="next step" @click="stepOnce()">1ステップ進む</v-btn>
+            <v-btn id="btnStep" v-if="anime" value="next step" disabled>1ステップ進む</v-btn>
             <v-btn id="btnReset" value="reset" @click="reset()">リセット</v-btn>
             <v-btn value="angle reset" @click="setCamera()">カメラアングルリセット</v-btn>
           </div>
