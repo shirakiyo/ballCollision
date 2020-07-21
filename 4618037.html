@@ -481,7 +481,7 @@
           const r = this.getRandomArbitrary(0.8, 2);
           const m = this.getRandomArbitrary(1, 30);
 
-          this.setBall(vx, 0, vz, r, m, color)
+          this.setBall(vx, 0, vz, Math.round(r * 10) / 10, Math.round(m), color)
         }
 
         // カメラ位置の初期化
