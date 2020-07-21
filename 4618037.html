@@ -555,10 +555,6 @@
         scene.background = new THREE.Color(0xcce0ff);
         scene.fog = new THREE.Fog("white", 50, 200);
 
-        // const light_right = new THREE.DirectionalLight('white', 1);   // 白色、強度1（最大）
-        // light_right.position.set(40, 30, -30);                        // 光源の位置を設定
-        // scene.add(light_right);                                       // シーンへ追加
-
         // 軸の作成
         const axes = new THREE.AxesHelper(5);
         axes.position.set(-18, 0, 0)
@@ -657,28 +653,6 @@
                   this.ball[i].vx = vxi
                   this.ball[i].vz = vzi
 
-                  // let theta, phi, vai, vaj, vbi, vbj;
-                  //
-                  // // 作用線に対し水平・垂直方向のベクトルに分解
-                  // theta = Math.atan2(this.ball[i].z - this.ball[j].z, this.ball[i].x - this.ball[j].x);
-                  // phi = Math.atan2(this.ball[i].vz, this.ball[i].vx) - theta;
-                  // vai = Math.hypot(this.ball[i].vz, this.ball[i].vx) * Math.cos(phi);
-                  // vbi = Math.hypot(this.ball[i].vz, this.ball[i].vx) * Math.sin(phi);
-                  // phi = Math.atan2(this.ball[j].vz, this.ball[j].vx) - theta;
-                  // vaj = Math.hypot(this.ball[j].vz, this.ball[j].vx) * Math.cos(phi);
-                  // vbj = Math.hypot(this.ball[j].vz, this.ball[j].vx) * Math.sin(phi);
-                  //
-                  // // 作用線方向の速度成分の交換（質量が同じ場合）
-                  // let tmp = vai;
-                  // vai = vaj;
-                  // vaj = tmp;
-                  //
-                  // // XY方向のベクトルに変換・合成
-                  // this.ball[i].vx = vai * Math.cos(theta) - vbi * Math.sin(theta);
-                  // this.ball[i].vz = vai * Math.sin(theta) + vbi * Math.cos(theta);
-                  // this.ball[j].vx = vaj * Math.cos(theta) - vbj * Math.sin(theta);
-                  // this.ball[j].vz = vaj * Math.sin(theta) + vbj * Math.cos(theta);
-
                   // 直前の座標
                   this.ball[i].x = this.ball[i].xPrev;
                   this.ball[i].y = this.ball[i].yPrev;
@@ -716,12 +690,10 @@
         } else {
           this.anime = true;
           this.animeText = 'ストップ'
-          this.draw();
         }
       },
       stepOnce() {
         this.animeOnce = true;
-        this.draw();
       },
       reset() {
         for (let i = 0; i < this.ball.length; i++) {
